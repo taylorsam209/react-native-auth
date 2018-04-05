@@ -1,8 +1,51 @@
 import React, { Component } from "react";
-import { Button, Card, CardSection, Input } from "./common";
+import { Text } from "react-native";
+import { Button, Card, CardSection, Input, Spinner } from "./common";
+import firebase from "firebase";
 
 class LoginForm extends Component {
-  state = { emailText: "", passwordText: "" };
+  state = {
+    emailText: "",
+    passwordText: "",
+    error: "",
+    loading: false
+  };
+
+  onButtonPress() {
+    const { emailText, passwordText } = this.state;
+    this.setState({ error: "", loading: true });
+    firebase.auth().signInWithEmailAndPassword(emailText, passwordText)
+      .then(this.onLoginSuccess.bind(this))
+      .catch(() => {
+        firebase.auth().createUserAndRetrieveDataWithEmailAndPassword(emailText,passwordText)
+          .then(this.onLoginSuccess.bind(this))
+          .catch(this.onLoginFail.bind(this));
+      });
+  }
+
+  onLoginFail() {
+    this.setState({
+      error: "Authentication Failed",
+      loading: false
+    });
+  }
+
+  onLoginSuccess() {
+    this.setState({
+      emailText: "",
+      passwordText: "",
+      loading: false,
+      error: ""
+    });
+  }
+
+  renderButton() {
+    return this.state.loading ? (
+      <Spinner size="small" />
+    ) : (
+      <Button onPress={this.onButtonPress.bind(this)}>Log In</Button>
+    );
+  }
 
   render() {
     return (
@@ -11,32 +54,32 @@ class LoginForm extends Component {
           <Input
             placeholder="user@gmail.com"
             value={this.state.emailText}
-            onChangeText={text => this.setState({ emailText })}
+            onChangeText={emailText => this.setState({ emailText })}
             label="Email"
           />
         </CardSection>
 
         <CardSection>
           <Input
+            secureTextEntry={true}
             placeholder="Enter password"
             value={this.state.passwordText}
-            onChangeText={text => this.setState({ passwordText })}
+            onChangeText={passwordText => this.setState({ passwordText })}
             label="Password"
           />
         </CardSection>
-
-        <CardSection>
-          <Button>Log In</Button>
-        </CardSection>
+        <Text style={styles.errorText}>{this.state.error}</Text>
+        <CardSection>{this.renderButton()}</CardSection>
       </Card>
     );
   }
 }
 
 const styles = {
-  textInput: {
-    height: 20,
-    width: 100
+  errorText: {
+    color: "red",
+    fontSize: 20,
+    alignSelf: "center"
   }
 };
 
