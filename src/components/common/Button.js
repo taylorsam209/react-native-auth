@@ -33,4 +33,4 @@ const styles = {
     }
 }
 
-export default Button;
+export {Button}; //Must export as an object in order to use it with ./index.js export/import syntax;
